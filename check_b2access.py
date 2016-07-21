@@ -13,7 +13,9 @@ from time import strftime,gmtime
 #from odf.form import Password
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
+import httplib
 import requests.packages.urllib3
+from requests.auth import HTTPBasicAuth
 
 
 TEST_SUFFIX='NAGIOS-' +  strftime("%Y%m%d-%H%M%S",gmtime())
@@ -25,47 +27,108 @@ def handler(signum, stack):
     print "UNKNOWN: Timeout reached, exiting."
     sys.exit(3)
 
-def getAccessToken():
-    """Fetch access token from Unity"""
-    #disable ssl warnings and trust the unity server
-    requests.packages.urllib3.disable_warnings()
+def getAccessToken(param):
+    """Fetch access token from B2ACCESS"""
+    print "\nFetch access token from B2ACCESS"
+    """ Pre-req: Create a user 'argo' with password 'test' in group 'oauth-clients' and 'eudat:b2share' or any other """ 
     
-    client = BackendApplicationClient(client_id=username)
-    client.prepare_request_body(scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
-    oauth = OAuth2Session(client=client)
-    token = oauth.fetch_token(token_url='https://unity.eudat-aai.fz-juelich.de:8443/oauth2/token', verify=False,client_id='argo',client_secret='test')
-    j = json.dumps(token)
-    k = json.loads(j)
-    print "Acquired access token: "+k['access_token']
+    try:
+        client = BackendApplicationClient(client_id=username)
+        client.prepare_request_body(scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
+        oauth = OAuth2Session(client=client)
+        token = oauth.fetch_token(token_url=str(param.url)+TOKEN_URI, verify=False,client_id=str(param.username),client_secret=str(param.password))
+        j = json.dumps(token)
+        k = json.loads(j)
+        print "Acquired access token: "+k['access_token']
+        getTokenInfo(str(param.url)+'/oauth2/tokeninfo', str(k['access_token']))
+        getUserInfo(str(param.url)+'/oauth2/userinfo', str(k['access_token']))
+    except:
+        raise
+        exit(1)
+        
+def getTokenInfo(url, token):
+    """ Fetch access token details """
+    try: 
+        print url
+        entity = requests.get(url,verify=False, headers = {'Authorization': 'Bearer '+token})
+        print 'Token info: '+entity.text        
+    except:
+        raise
+        exit(1)
+
+def getUserInfo(url, token):
+    """ Fetch user information using access token """
+    print "\nFetch user information on the basis of access token"
+    try: 
+        print url
+        entity = requests.get(url,verify=False, headers = {'Authorization': 'Bearer '+token})
+        print 'User info: '+entity.text        
+    except:
+        raise
+        exit(1)
+
+        
+def getInfoCert(param):
+    """ Query user information with username and password """
+    
+    print "\nQuery user information with username and password"
+    
+    url = param.url+"/rest-admin/v1/resolve/userName/argo"
+    
+    try: 
+        print url
+        entity = requests.get(str(url),verify=False,auth=(str(param.username), str(param.password)))
+        if entity.status_code == 403:
+            print "Error occurred while resolving the given user: "+str(param.username)
+            exit(1)
+        print entity
+    except:
+        raise
+        exit(1)
 
 if __name__ == '__main__':
+    #disable ssl warnings and trust the unity server
+    requests.packages.urllib3.disable_warnings()
     parser = argparse.ArgumentParser(description='B2ACCESS login, query probe')
     req = parser.add_argument_group('required arguments')
     req.add_argument('-u', '--url', action='store', dest='url', required=True,
-            help='baseuri of B2ACCESS to test')
+            help='baseuri of B2ACCESS-UNITY to test')
     req.add_argument('-U', '--username', action='store', dest='username', required=True,
             help='B2ACCESS user')
-    req.add_argument('-P', '--pass', action='store', dest='password', required=True,
+    req.add_argument('-P', '--password', action='store', dest='password', required=True,
             help='B2ACCESS password')
     req.add_argument('-t', '--timeout', action='store', dest='timeout',
-            help='timeout')
+            help='timeout', required=True)
+    req.add_argument('-v', '--version', action='store', dest='version',
+            help='version')
+    req.add_argument('-V', '--verbose', action='store', dest='verbose',
+            help='increase output verbosity')
     parser.add_argument('-d', '--debug', action='store_true', dest='debug',
             help='debug mode')
+    parser.add_argument('-C', '--cert', action='store', dest='certificate',
+            help='Path to public key certificate')
+    parser.add_argument('-K', '--key', action='store', dest='key',
+            help='Path to private key')
 
     param = parser.parse_args()
-
+    
     base_url = param.url
-    base_url = base_url+TOKEN_URI
     username = param.username
     password = param.password
     timeout = param.timeout
-
+    
+    if param.verbose:
+        print "verbosity is turned on"
+    
     if param.timeout and int(param.timeout) > 0 :
         signal.signal(signal.SIGALRM, handler)
         signal.alarm(int(param.timeout))
-        print "UNITY url: "+base_url
-        print "username: "+username
-        print "password: "+password
+        print "Starting B2ACCESS Probe...\n---------------------------\n"
+        print "UNITY url: "+str(base_url)
+        print "B2ACCESS username: "+username
         print "Timeout: "+timeout
-    
-    getAccessToken()
+        print "Public key: "+param.certificate   
+        getAccessToken(param)
+        getInfoCert(param)
+        print "\nProbe exited gracefully!"
+        exit(0)
