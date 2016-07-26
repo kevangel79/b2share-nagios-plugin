@@ -4,18 +4,11 @@ import argparse
 import sys
 
 import signal
-# import the standard JSON parser
 import json
-#import requests
-# import the REST library
-#from restful_lib import Connection
 from time import strftime,gmtime
-#from odf.form import Password
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
-import httplib
 import requests.packages.urllib3
-from requests.auth import HTTPBasicAuth
 
 
 TEST_SUFFIX='NAGIOS-' +  strftime("%Y%m%d-%H%M%S",gmtime())
@@ -36,8 +29,8 @@ def getAccessToken(param):
         client = BackendApplicationClient(client_id=username)
         client.prepare_request_body(scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
         oauth = OAuth2Session(client=client)
-        token = oauth.fetch_token(token_url=str(param.url)+TOKEN_URI, verify=False,client_id=str(param.username),client_secret=str(param.password))
-        j = json.dumps(token)
+        token = oauth.fetch_token(token_url=str(param.url)+TOKEN_URI, verify=False,client_id=str(param.username),client_secret=str(param.password),scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
+        j = json.dumps(token, indent=4)
         k = json.loads(j)
         print "Acquired access token: "+k['access_token']
         getTokenInfo(str(param.url)+'/oauth2/tokeninfo', str(k['access_token']))
@@ -68,7 +61,7 @@ def getUserInfo(url, token):
         exit(1)
 
         
-def getInfoCert(param):
+def getInfoUsernamePassword(param):
     """ Query user information with username and password """
     
     print "\nQuery user information with username and password"
@@ -81,7 +74,29 @@ def getInfoCert(param):
         if entity.status_code == 403:
             print "Error occurred while resolving the given user: "+str(param.username)
             exit(1)
-        print entity
+        j = json.dumps(entity.text, indent=5)
+        k = json.loads(j)
+        print k
+    except:
+        raise
+        exit(1)
+        
+def getInfoCert(param):
+    """ Query user information with X509 Certificate Authentication """
+    
+    print "\nQuery user information with X509 Certificate Authentication"
+    
+    url = param.url+"/rest-admin/v1/resolve/x500Name/CN=Ahmed Shiraz Memon,OU=IAS-JSC,OU=Forschungszentrum Juelich GmbH,O=GridGermany,C=DE"
+    
+    try: 
+        print url
+        entity = requests.get(str(url),verify=False,cert=(str(param.certificate), str(param.key)))
+        if entity.status_code == 403:
+            print "Error occurred while resolving the given user: "+str(param.username)
+            exit(1)
+        j = json.dumps(entity.text, indent=5)
+        k = json.loads(j)
+        print k
     except:
         raise
         exit(1)
@@ -129,6 +144,7 @@ if __name__ == '__main__':
         print "Timeout: "+timeout
         print "Public key: "+param.certificate   
         getAccessToken(param)
+        getInfoUsernamePassword(param)
         getInfoCert(param)
         print "\nProbe exited gracefully!"
         exit(0)
