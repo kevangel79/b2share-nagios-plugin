@@ -11,7 +11,7 @@ The B2ACCESS probe for ARGO does the following:
 ..- X509 certificate
 
 ## Usage
-'''
+```
 
 python check_b2access.py -U [username] -P [password] -u [unity base url] -t [timeout in seconds] -C [Filesystem path to public key] -K [Filesystem path to private key]
-'''
+```
