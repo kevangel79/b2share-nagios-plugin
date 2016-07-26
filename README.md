@@ -1,4 +1,4 @@
-# B2ACCESS monitoring probe
+# B2ACCESS Monitoring probe for ARGO
 
 ## Overview
 The B2ACCESS probe for ARGO does the following:
