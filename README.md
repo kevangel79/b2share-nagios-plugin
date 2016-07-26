@@ -12,8 +12,8 @@ The B2ACCESS probe for ARGO does the following:
 
 ## Pre-requisites:
 
-- Probe robot user SHOULD have two accounts: username/password and X509 certificate
-- She SHOULD be a part of the group **/oauth-clients** or the group defined for the property **unity.oauth2.as.clientsGroup** inside the **/UNITY-CONF/endpoints/oauth2-as.properties file**, additionally the user SHOULD have **sys:oauth:allowedGrantFlows = client** attribute defined inside the group - it can also be provided inside the OAuth client registration form
+- Probe robot user SHOULD have two accounts registered within B2ACCESS/UNITY: username/password and X509 certificate
+- She SHOULD be a part of the group **/oauth-clients** or the group defined for the property **unity.oauth2.as.clientsGroup** inside the **/UNITY-CONF/endpoints/oauth2-as.properties file**, additionally the user SHOULD have **sys:oauth:allowedGrantFlows = client** attribute defined inside the group. The attribute can also be set filling-up the OAuth client registration form
 - She SHOULD also be a part of the group defined for the property **unity.oauth2.as.usersGroup** inside the **/UNITY-CONF/endpoints/oauth2-as.properties file**
 - The UNITY administrator SHOULD enable certificate authenticator for the REST Admin endpoint (by default disabled) 
 
