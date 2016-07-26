@@ -11,5 +11,5 @@ The B2ACCESS probe for ARGO does the following:
 ** X509 certificate
 
 ## Usage
-> python check_b2access.py -U <username> -P <password> -u <unity base url> -t 10 -C <path to public key> -K <path to private key>
+> python check_b2access.py -U [username] -P <password> -u <unity base url> -t 10 -C <path to public key> -K <path to private key>
 
