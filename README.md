@@ -24,7 +24,6 @@ unityServer.core.endpoints.x.endpointConfigurationFile=conf/authenticators/empty
 unityServer.core.endpoints.x.contextPath=/rest-admin
 unityServer.core.endpoints.x.endpointRealm=defaultRealm
 unityServer.core.endpoints.x.endpointName=RESTful administration API
-#unityServer.core.endpoints.x.endpointAuthenticators=pwdWeb
 unityServer.core.endpoints.x.endpointAuthenticators=pwdRest;certRest
 ```
 
