@@ -31,4 +31,8 @@ unityServer.core.endpoints.x.endpointAuthenticators=pwdRest;certRest
 
 > python check_b2access.py -U [username] -P [password] -u [unity base url] -t [timeout in seconds] -C [Filesystem path to public key] -K [Filesystem path to private key]
 
+Example
+
+> python check_b2access.py -U argo -P testPass -u https://localhost:8443 -t 10 -C /Public_Key.pem -K Private_Key.pem
+
 
