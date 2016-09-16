@@ -9,6 +9,9 @@ from time import strftime,gmtime
 from oauthlib.oauth2 import BackendApplicationClient
 from requests_oauthlib import OAuth2Session
 import requests.packages.urllib3
+from Crypto.PublicKey import RSA
+import subprocess
+
 
 
 TEST_SUFFIX='NAGIOS-' +  strftime("%Y%m%d-%H%M%S",gmtime())
@@ -66,7 +69,7 @@ def getInfoUsernamePassword(param):
     
     print "\nQuery user information with username and password"
     
-    url = param.url+"/rest-admin/v1/resolve/userName/argo"
+    url = param.url+"/rest-admin/v1/resolve/userName/"+str(param.username)
     
     try: 
         print url
@@ -86,7 +89,16 @@ def getInfoCert(param):
     
     print "\nQuery user information with X509 Certificate Authentication"
     
-    url = param.url+"/rest-admin/v1/resolve/x500Name/CN=Ahmed Shiraz Memon,OU=IAS-JSC,OU=Forschungszentrum Juelich GmbH,O=GridGermany,C=DE"
+   
+    cert_txt = subprocess.check_output(["openssl", "x509", "-subject", "-noout","-in", param.certificate])
+    
+    sub = str(cert_txt).replace("subject= ", "")
+    
+    dn = getLdapName(sub)
+    
+    """ url = param.url+"/rest-admin/v1/resolve/x500Name/CN=Ahmed Shiraz Memon,OU=IAS-JSC,OU=Forschungszentrum Juelich GmbH,O=GridGermany,C=DE" """
+    
+    url = param.url+"/rest-admin/v1/resolve/x500Name/"+dn
     
     try: 
         print url
@@ -100,6 +112,23 @@ def getInfoCert(param):
     except:
         raise
         exit(1)
+
+def getLdapName(openssl_name):
+    name = str(openssl_name)
+    strs = name.split("/")
+    
+    strs.reverse()
+    
+    strs[0] = str(strs[0]).rstrip()
+    
+    strs.pop()
+    
+    print strs
+    
+    str1 = ','.join(strs)
+    
+    return str1
+    
 
 if __name__ == '__main__':
     #disable ssl warnings and trust the unity server
