@@ -205,5 +205,8 @@ if __name__ == '__main__':
     getAccessToken(param)
     getInfoUsernamePassword(param)
     getInfoCert(param)
-    print "\nOK, User access token retrieval and login via X.509 Certificate and username/password were successful"
+    if param.verbose:
+        print "\nOK, User access token retrieval and login via X.509 Certificate and username/password were successful"
+    else:
+        print "OK"
     sys.exit(0)
