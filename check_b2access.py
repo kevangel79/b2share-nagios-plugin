@@ -41,7 +41,6 @@ def getAccessToken(param):
         getUserInfo(str(param.url)+'/oauth2/userinfo', str(k['access_token']), param.verbose)
     except:
         print("CRITICAL: Error fetching OAuth 2.0 access token:", sys.exc_info()[0])
-        raise
         sys.exit(2)
         
         
@@ -59,7 +58,6 @@ def getTokenInfo(url, token, verbose):
             print 'Detailed token info: '+entity.text
     except:
         print("CRITICAL: Error retrieving access token information:", sys.exc_info()[0])
-        raise
         sys.exit(2)
         
 
@@ -78,7 +76,6 @@ def getUserInfo(url, token, verbose):
         
     except:
         print("CRITICAL: Error retrieving user information:", sys.exc_info()[0])
-        raise
         sys.exit(2)
 
         
@@ -104,7 +101,6 @@ def getInfoUsernamePassword(param):
         
     except:
         print("CRITICAL: Error retrieving user information with username/password:", sys.exc_info()[0])
-        raise
         sys.exit(2)
         
 def getInfoCert(param):
@@ -137,7 +133,6 @@ def getInfoCert(param):
             print "Detailed user information: "+entity.text
     except:
         print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info()[0])
-        raise
         sys.exit(2)
 
 def getLdapName(openssl_name):
