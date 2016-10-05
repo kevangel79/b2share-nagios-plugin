@@ -39,9 +39,9 @@ def getAccessToken(param):
         getTokenInfo(str(param.url)+'/oauth2/tokeninfo', str(k['access_token']), param.verbose)
         getUserInfo(str(param.url)+'/oauth2/userinfo', str(k['access_token']), param.verbose)
     except:
-        print("Error fetching OAuth 2.0 access token:", sys.exc_info()[0])
+        print("CRITICAL: Error fetching OAuth 2.0 access token:", sys.exc_info()[0])
         raise
-        sys.exit(1)
+        sys.exit(2)
         
 def getTokenInfo(url, token, verbose):
     """ Fetch access token details """
@@ -57,9 +57,9 @@ def getTokenInfo(url, token, verbose):
         if verbose:
             print 'Detailed token info: '+entity.text
     except:
-        print("Error retrieving access token information:", sys.exc_info()[0])
+        print("CRITICAL: Error retrieving access token information:", sys.exc_info()[0])
         raise
-        sys.exit(1)
+        sys.exit(2)
 
 def getUserInfo(url, token, verbose):
     """ Fetch user information using access token """
@@ -76,9 +76,9 @@ def getUserInfo(url, token, verbose):
             print 'Detailed user information: '+entity.text
         
     except:
-        print("Error retrieving user information:", sys.exc_info()[0])
+        print("CRITICAL: Error retrieving user information:", sys.exc_info()[0])
         raise
-        sys.exit(1)
+        sys.exit(2)
 
         
 def getInfoUsernamePassword(param):
@@ -102,9 +102,9 @@ def getInfoUsernamePassword(param):
             print "Detailed user information: "+entity.text
         
     except:
-        print("Error retrieving user information with username/password:", sys.exc_info()[0])
+        print("CRITICAL: Error retrieving user information with username/password:", sys.exc_info()[0])
         raise
-        sys.exit(1)
+        sys.exit(2)
         
 def getInfoCert(param):
     """ Query user information with X509 Certificate Authentication """
@@ -133,14 +133,14 @@ def getInfoCert(param):
         print "X500Name: "+j['identities'][0]['value']
         
         if entity.status_code == 403:
-            print "Error occurred while resolving the given user: "+str(param.username)
-            exit(1)
+            print "CRITICAL: Error occurred while resolving the given user: "+str(param.username)
+            exit(2)
         if param.verbose:
             print "Detailed user information: "+entity.text
     except:
-        print("Error retrieving user information by X509 certificate:", sys.exc_info()[0])
+        print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info()[0])
         raise
-        sys.exit(1)
+        sys.exit(2)
 
 def getLdapName(openssl_name):
     name = str(openssl_name)
@@ -191,7 +191,7 @@ if __name__ == '__main__':
     timeout = param.timeout
     
     if param.verbose == True:
-        print "verbosity is turned on"
+        print "verbosity is turned ON"
     
     if param.timeout and int(param.timeout) > 0 :
         print "Timeout: "+timeout
@@ -205,5 +205,5 @@ if __name__ == '__main__':
     getAccessToken(param)
     getInfoUsernamePassword(param)
     getInfoCert(param)
-    print "\nProbe exited gracefully!"
+    print "\nOK, User access token retrieval and login via X.509 Certificate and username/password were successful"
     sys.exit(0)
