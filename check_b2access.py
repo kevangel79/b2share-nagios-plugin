@@ -42,7 +42,6 @@ def getAccessToken(param):
     except:
         print("CRITICAL: Error fetching OAuth 2.0 access token:", sys.exc_info()[0])
         raise
-        return 2
         sys.exit(2)
         
         
@@ -61,7 +60,6 @@ def getTokenInfo(url, token, verbose):
     except:
         print("CRITICAL: Error retrieving access token information:", sys.exc_info()[0])
         raise
-        return 2
         sys.exit(2)
         
 
@@ -81,7 +79,6 @@ def getUserInfo(url, token, verbose):
     except:
         print("CRITICAL: Error retrieving user information:", sys.exc_info()[0])
         raise
-        return 2
         sys.exit(2)
 
         
@@ -97,7 +94,6 @@ def getInfoUsernamePassword(param):
         entity = requests.get(str(url),verify=False,auth=(str(param.username), str(param.password)))
         if entity.status_code == 403:
             print "Error occurred while resolving the given user: "+str(param.username)
-            return 1
             sys.exit(1)
         j = entity.json()
         if param.verbose:
@@ -109,7 +105,6 @@ def getInfoUsernamePassword(param):
     except:
         print("CRITICAL: Error retrieving user information with username/password:", sys.exc_info()[0])
         raise
-        return 2
         sys.exit(2)
         
 def getInfoCert(param):
@@ -137,14 +132,12 @@ def getInfoCert(param):
         
         if entity.status_code == 403:
             print "CRITICAL: Error occurred while resolving the given user: "+str(param.username)
-            return 2
             sys.exit(2)
         if param.verbose:
             print "Detailed user information: "+entity.text
     except:
         print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info()[0])
         raise
-        return 2
         sys.exit(2)
 
 def getLdapName(openssl_name):
