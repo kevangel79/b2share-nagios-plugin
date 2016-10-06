@@ -11,6 +11,9 @@ from requests_oauthlib import OAuth2Session
 import requests.packages.urllib3
 import subprocess
 import datetime
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error, MissingTokenError
+from requests.exceptions import ConnectionError, HTTPError
+import os.path
 
 TEST_SUFFIX='NAGIOS-' +  strftime("%Y%m%d-%H%M%S",gmtime())
 VALUE_ORIG='http://www.' + TEST_SUFFIX + '.com/1'
@@ -39,9 +42,19 @@ def getAccessToken(param):
         
         getTokenInfo(str(param.url)+'/oauth2/tokeninfo', str(k['access_token']), param.verbose)
         getUserInfo(str(param.url)+'/oauth2/userinfo', str(k['access_token']), param.verbose)
+    except ConnectionError as e:
+        print "CRITICAL: Invalid Unity URL: {0}".format(e)
+        sys.exit(2)
+    except MissingTokenError as e:
+        print "CRITICAL: Invalid client Id and/or secret: {0}".format(e.description)
+        sys.exit(2)
+    except TypeError as e:
+        print e
+        sys.exit(2)
     except:
         print("CRITICAL: Error fetching OAuth 2.0 access token:", sys.exc_info()[0])
         sys.exit(2)
+        raise
         
         
 def getTokenInfo(url, token, verbose):
@@ -49,16 +62,26 @@ def getTokenInfo(url, token, verbose):
     try:
         if verbose:
             print "Fetching access token information from URL: "+url
-            
+        
         entity = requests.get(url,verify=False, headers = {'Authorization': 'Bearer '+token})
         j = entity.json()
         expire = datetime.datetime.fromtimestamp(int(j['exp'])).strftime('%Y-%m-%d %H:%M:%S')
         if verbose:
-            print "Expires in: "+expire
+            print "Expires on: "+expire
             print 'Detailed token info: '+entity.text
+    except KeyError as e:
+        print "WARNING: Invalid key(s): {0}".format(e)
+        sys.exit(1)
+    except ValueError as e:
+        print "CRITICAL: Invalid access token: {0}".format(e)
+        sys.exit(2)
+    except ConnectionError as e:
+        print "CRITICAL: Invalid token endpoint URL: {0}".format(e)
+        sys.exit(2)
     except:
         print("CRITICAL: Error retrieving access token information:", sys.exc_info()[0])
         sys.exit(2)
+        raise
         
 
 def getUserInfo(url, token, verbose):
@@ -73,10 +96,19 @@ def getUserInfo(url, token, verbose):
             print "Subject: "+j['sub']
             print "Persistent Id: "+j['unity:persistent']
             print 'Detailed user information: '+entity.text
-        
+    except KeyError as e:
+        print "WARNING: Invalid key(s): {0}".format(e)
+        sys.exit(1)
+    except ValueError as e:
+        print "CRITICAL: Invalid access token: {0}".format(e)
+        sys.exit(2)
+    except ConnectionError as e:
+        print "CRITICAL: Invalid UserInfo endpoint URL: {0}".format(e)
+        sys.exit(2)  
     except:
         print("CRITICAL: Error retrieving user information:", sys.exc_info()[0])
         sys.exit(2)
+        raise
 
         
 def getInfoUsernamePassword(param):
@@ -88,20 +120,31 @@ def getInfoUsernamePassword(param):
         print "\nQuery with username and password, endpoint URL: "+url
     
     try: 
-        entity = requests.get(str(url),verify=False,auth=(str(param.username), str(param.password)))
+        uname = param.username
+        pwd = param.password
+        entity = requests.get(str(url),verify=False,auth=(uname, pwd))
         if entity.status_code == 403:
-            print "Error occurred while resolving the given user: "+str(param.username)
-            sys.exit(1)
+            raise HTTPError("CRITICAL: Error retrieving the user information with username {0}: invalid username/password".format(uname))
+            sys.exit(2)
         j = entity.json()
         if param.verbose:
             print "Credential requirement: "+j['credentialInfo']['credentialRequirementId']
             print "Entity Id: "+str(j['id'])
             print "Username: "+j['identities'][0]['value']
             print "Detailed user information: "+entity.text
-        
-    except:
-        print("CRITICAL: Error retrieving user information with username/password:", sys.exc_info()[0])
+    except ConnectionError as e:
+        print "CRITICAL: Invalid Unity endpoint URL: {0}".format(e)
         sys.exit(2)
+    except HTTPError as e:
+        print e
+        sys.exit(2)
+    except KeyError as e:
+        print "CRITICAL: Invalid key(s): {0}".format(e)
+        sys.exit(2)   
+    except:
+        print("CRITICAL: Error retrieving user information with the username/password:", sys.exc_info()[0])
+        sys.exit(2)
+        raise
         
 def getInfoCert(param):
     """ Query user information with X509 Certificate Authentication """
@@ -120,20 +163,29 @@ def getInfoCert(param):
             print "\nQuery user information with X509 Certificate Authentication, endpoint URL:" + url
         
         entity = requests.get(str(url),verify=False,cert=(str(param.certificate), str(param.key)))
+        
+        if (entity.status_code == 400) or (entity.status_code == 403):
+            raise HTTPError("CRITICAL: Error retrieving the user information with X500Name {0}: invalid certificate".format(dn))
+            sys.exit(2)
+        
         j = entity.json()
         if param.verbose:
             print "Credential requirement: "+j['credentialInfo']['credentialRequirementId']
             print "Entity Id: "+str(j['id'])
             print "X500Name: "+j['identities'][0]['value']
         
-        if entity.status_code == 403:
-            print "CRITICAL: Error occurred while resolving the given user: "+str(param.username)
-            sys.exit(2)
         if param.verbose:
             print "Detailed user information: "+entity.text
+    except HTTPError as e:
+        print e
+        sys.exit(2)
+    except KeyError as e:
+        print "CRITICAL: Invalid key(s): {0}".format(e)
+        sys.exit(2)
     except:
         print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info()[0])
         sys.exit(2)
+        raise
 
 def getLdapName(openssl_name):
     name = str(openssl_name)
@@ -172,9 +224,9 @@ if __name__ == '__main__':
     parser.add_argument('-d', '--debug', action='store_true', dest='debug',
             help='debug mode')
     parser.add_argument('-C', '--cert', action='store', dest='certificate',
-            help='Path to public key certificate')
+            help='Path to public key certificate', required=True)
     parser.add_argument('-K', '--key', action='store', dest='key',
-            help='Path to private key')
+            help='Path to private key', required=True)
 
     param = parser.parse_args()
     
@@ -194,10 +246,25 @@ if __name__ == '__main__':
         print "Starting B2ACCESS Probe...\n---------------------------\n"
         print "B2ACCESS url: "+str(base_url)
         print "B2ACCESS username: "+username
-        print "Public key: "+param.certificate   
+        print "Public key: "+param.certificate
+        
+    try:   
+        if not os.path.exists(param.certificate):
+            raise IOError("CRITICAL: Public key certificate file does not exist: {0}".format(param.certificate))
+        if not os.path.exists(param.key):
+            raise IOError("CRITICAL: Private key file does not exist: : {0}".format(param.key))
+    except IOError as e:
+        print e
+        sys.exit(2)
+    except:
+        print(sys.exc_info()[0])
+        sys.exit(2)
+        raise
+    
     getAccessToken(param)
     getInfoUsernamePassword(param)
     getInfoCert(param)
+    
     if param.verbose:
         print "OK" 
     else:
