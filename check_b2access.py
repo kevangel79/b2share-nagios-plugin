@@ -14,6 +14,8 @@ import datetime
 from oauthlib.oauth2.rfc6749.errors import OAuth2Error, MissingTokenError
 from requests.exceptions import ConnectionError, HTTPError
 import os.path
+import validators
+from validators.utils import ValidationFailure
 
 TEST_SUFFIX='NAGIOS-' +  strftime("%Y%m%d-%H%M%S",gmtime())
 VALUE_ORIG='http://www.' + TEST_SUFFIX + '.com/1'
@@ -253,7 +255,12 @@ if __name__ == '__main__':
             raise IOError("CRITICAL: Public key certificate file does not exist: {0}".format(param.certificate))
         if not os.path.exists(param.key):
             raise IOError("CRITICAL: Private key file does not exist: : {0}".format(param.key))
+        if not validators.url(param.url):
+            raise SyntaxError("CRITICAL: Invalid URL syntax {0}".format(param.url))
     except IOError as e:
+        print e
+        sys.exit(2)
+    except SyntaxError as e:
         print e
         sys.exit(2)
     except:
