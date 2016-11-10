@@ -29,10 +29,20 @@ unityServer.core.endpoints.x.endpointAuthenticators=pwdRest;certRest
 
 ## How it works?
 
-> python check_b2access.py -U [username] -P [password] -u [unity base url] -t [timeout in seconds] -C [Filesystem path to public key] -K [Filesystem path to private key]
+### Username & password based authentication
+
+> python check_b2access.py -u [unity base url] -t [timeout in seconds] -V 1 -U [username] -P [password]
 
 Example
 
-> python check_b2access.py -U argo -P testPass -u https://localhost:8443 -t 10 -C /Public_Key.pem -K Private_Key.pem
+> python check_b2access.py -u https://localhost:8443 -t 10 -V 1 -U argo -P testPass
+
+### X.509 Certificate based authentication
+
+> python check_b2access.py -u [unity base url] -t [timeout in seconds] -V 2 -C [Filesystem path to public key] -K [Filesystem path to private key]
+
+Example
+
+> python check_b2access.py -u https://localhost:8443 -t 10 -V 2 -C /Public_Key.pem -K Private_Key.pem
 
 

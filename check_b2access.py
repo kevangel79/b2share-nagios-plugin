@@ -210,32 +210,44 @@ if __name__ == '__main__':
     #disable ssl warnings and trust the unity server
     requests.packages.urllib3.disable_warnings()
     parser = argparse.ArgumentParser(description='B2ACCESS login, query probe')
-    req = parser.add_argument_group('required arguments')
-    req.add_argument('-u', '--url', action='store', dest='url', required=True,
-            help='baseuri of B2ACCESS-UNITY to test')
-    req.add_argument('-U', '--username', action='store', dest='username', required=True,
-            help='B2ACCESS user')
-    req.add_argument('-P', '--password', action='store', dest='password', required=True,
-            help='B2ACCESS password')
-    req.add_argument('-t', '--timeout', action='store', dest='timeout',
-            help='timeout')
-    req.add_argument('-v', '--version', action='store', dest='version',
-            help='version')
-    req.add_argument('-V', '--verbose', action='store_true', dest='verbose',
-            help='increase output verbosity', default=False)
-    parser.add_argument('-d', '--debug', action='store_true', dest='debug',
-            help='debug mode')
-    parser.add_argument('-C', '--cert', action='store', dest='certificate',
-            help='Path to public key certificate', required=True)
-    parser.add_argument('-K', '--key', action='store', dest='key',
-            help='Path to private key', required=True)
-
-    param = parser.parse_args()
     
+    # req = parser.add_argument_group('required arguments')
+    
+    subParsers = parser.add_subparsers()
+    
+    parser.add_argument('-u', '--url', action='store', dest='url', required=True,
+             help='baseuri of B2ACCESS-UNITY to test')
+    parser.add_argument('-t', '--timeout', action='store', dest='timeout',
+             help='timeout')
+    parser.add_argument('-v', '--version', action='store', dest='version',
+             help='version')
+    parser.add_argument('-V', '--verbose', action='store_true', dest='verbose',
+             help='increase output verbosity', default=False)
+    parser.add_argument('-d', '--debug', action='store_true', dest='debug',
+             help='debug mode')
+    
+    u_parser = subParsers.add_parser('1',help='Username/Password based authentication')
+    u_parser.add_argument('-U', '--username', action='store', dest='username', required=True,
+             help='B2ACCESS user')
+    u_parser.add_argument('-P', '--password', action='store', dest='password', required=True,
+             help='B2ACCESS password')
+    u_parser.set_defaults(action='1')
+    
+    c_parser = subParsers.add_parser('2',help='X.509 Certificate based authentication')
+    c_parser.add_argument('-C', '--cert', action='store', dest='certificate',
+            help='Path to public key certificate', required=True)
+    c_parser.add_argument('-K', '--key', action='store', dest='key',
+             help='Path to private key', required=True)    
+    c_parser.set_defaults(action='2')
+    
+    param = parser.parse_args()
     base_url = param.url
-    username = param.username
-    password = param.password
     timeout = param.timeout
+    
+    if param.action == "1":
+        username = param.username
+        password = param.password
+    
     
     if param.verbose == True:
         print "verbosity is turned ON"
@@ -244,17 +256,23 @@ if __name__ == '__main__':
         print "Timeout: "+timeout
         signal.signal(signal.SIGALRM, handler)
         signal.alarm(int(param.timeout))
+
+    
+    
     if param.verbose:    
         print "Starting B2ACCESS Probe...\n---------------------------\n"
         print "B2ACCESS url: "+str(base_url)
-        print "B2ACCESS username: "+username
-        print "Public key: "+param.certificate
-        
+        if param.action == "1":
+            print "B2ACCESS username: "+username
+        if param.action == "2":
+            print "Public key: "+param.certificate
+    
     try:   
-        if not os.path.exists(param.certificate):
-            raise IOError("CRITICAL: Public key certificate file does not exist: {0}".format(param.certificate))
-        if not os.path.exists(param.key):
-            raise IOError("CRITICAL: Private key file does not exist: : {0}".format(param.key))
+        if param.action == "2":
+            if not os.path.exists(param.certificate):
+                raise IOError("CRITICAL: Public key certificate file does not exist: {0}".format(param.certificate))
+            if not os.path.exists(param.key):
+                raise IOError("CRITICAL: Private key file does not exist: : {0}".format(param.key))
         if not validators.url(param.url):
             raise SyntaxError("CRITICAL: Invalid URL syntax {0}".format(param.url))
     except IOError as e:
@@ -268,12 +286,18 @@ if __name__ == '__main__':
         sys.exit(2)
         raise
     
-    getAccessToken(param)
-    getInfoUsernamePassword(param)
-    getInfoCert(param)
+    if param.action == "1":
+        getAccessToken(param)
+        getInfoUsernamePassword(param)
+    
+    if param.action == "2":
+        getInfoCert(param)
     
     if param.verbose:
-        print "OK" 
+        if param.action == "1":
+            print "\nOK, User access token retrieval and login with username/password was successful" 
+        if param.action == "2":
+            print "\nOK, User login with X.509 Certificate was successful" 
     else:
-        print "\nOK, User access token retrieval and login via X.509 Certificate and username/password were successful" 
+        print "OK"
     sys.exit(0)
