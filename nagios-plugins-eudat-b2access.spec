@@ -14,7 +14,7 @@
 #   limitations under the License.
 
 Name:		nagios-plugins-eudat-b2access
-Version:	0.2
+Version:	0.3
 Release:	1%{?dist}
 Summary:	Nagios B2ACCESS probes
 License:	Apache License, Version 2.0
@@ -30,10 +30,8 @@ Requires:	python-lxml
 Requires:	python-simplejson
 Requires:	python-defusedxml
 Requires:	python-httplib2
-Requires:	python-json
-Requires:	python-sys
 Requires:	python-requests
-Requires:	python-signal
+
 
 %description
 Nagios probes to check functionality of B2ACCESS Service
@@ -57,6 +55,8 @@ install -m 755 check_b2access.py %{buildroot}/%{_libexecdir}/argo-monitoring/pro
 %attr(0755,root,root) /%{_libexecdir}/argo-monitoring/probes/%{probe_namespace}/check_b2access.py
 
 %changelog
+* Wed Nov 23 2016 Shiraz Memon <a.memon@fz-juelich.de> - 0.3-1
+- Updated namespace and license information
 * Thu Sep 15 2016 Shiraz Memon <a.memon@fz-juelich.de> - 0.2-1
 - Updated namespace and license information
 * Thu Jul 28 2016 Shiraz Memon <a.memon@fz-juelich.de> - 0.1-1
