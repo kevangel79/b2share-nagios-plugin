@@ -34,7 +34,7 @@ def getAccessToken(param):
     
     try:
         client = BackendApplicationClient(client_id=username)
-        client.prepare_request_body(scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
+        client.prepare_request_body(scope=['profile','email','GENERATE_USER_CERTIFICATE'])
         oauth = OAuth2Session(client=client)
         token = oauth.fetch_token(token_url=str(param.url)+TOKEN_URI, verify=False,client_id=str(param.username),client_secret=str(param.password),scope=['USER_PROFILE','GENERATE_USER_CERTIFICATE'])
         j = json.dumps(token, indent=4)
@@ -156,28 +156,32 @@ def getInfoCert(param):
         sub = str(cert_txt).replace("subject= ", "")
     
         dn = getLdapName(sub)
-    
+        
         """ url = param.url+"/rest-admin/v1/resolve/x500Name/CN=Ahmed Shiraz Memon,OU=IAS-JSC,OU=Forschungszentrum Juelich GmbH,O=GridGermany,C=DE" """
     
         url = param.url+"/rest-admin/v1/resolve/x500Name/"+dn
         
+        print "url: "+url
+        
         if param.verbose:
             print "\nQuery user information with X509 Certificate Authentication, endpoint URL:" + url
         
-        entity = requests.get(str(url),verify=False,cert=(str(param.certificate), str(param.key)))
+        entity = requests.get(str(url),verify=True,cert=(str(param.certificate), str(param.key)))
         
         if (entity.status_code == 400) or (entity.status_code == 403):
             raise HTTPError("CRITICAL: Error retrieving the user information with X500Name {0}: invalid certificate".format(dn))
             sys.exit(2)
         
         j = entity.json()
+                
         if param.verbose:
             print "Credential requirement: "+j['credentialInfo']['credentialRequirementId']
-            print "Entity Id: "+str(j['id'])
+            """print "Entity Id: "+str(j['entityId'])"""
+            print "Entity Id: "+str(j['entityInformation']['entityId'])
             print "X500Name: "+j['identities'][0]['value']
         
         if param.verbose:
-            print "Detailed user information: "+entity.text
+            print "Detailed user information: \n"+json.dumps(j, indent=4)
     except HTTPError as e:
         print e
         sys.exit(2)
@@ -185,7 +189,7 @@ def getInfoCert(param):
         print "CRITICAL: Invalid key(s): {0}".format(e)
         sys.exit(2)
     except:
-        print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info()[0])
+        print("CRITICAL: Error retrieving user information by X509 certificate:", sys.exc_info())
         sys.exit(2)
         raise
 

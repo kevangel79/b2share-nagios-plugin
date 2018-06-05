@@ -1,5 +1,16 @@
 # B2ACCESS Monitoring probe for ARGO
 
+## Setting up environment
+- The probe has been tested with Python version 2.7.x
+- You may need to install (using pip) the following Python modules as they do not come with original distribution:
+	- requests
+	- oauthlib
+	- validators
+- As for the X.509 certificate based probing
+	- the public and private keys should be in PEM format
+	- should the private key encrypted with a passphrase, the value of **-t** flag should be sufficient enough to type in the secret (otherwise the prompt will disappear and the probe will fail), it is however recommended to not use the passphrase
+- The probe is not compatible with Unity version earlier than 2.x.x, please use v0.3 for earlier version
+
 ## Overview
 The B2ACCESS probe for ARGO does the following:
 

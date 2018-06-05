@@ -55,6 +55,10 @@ install -m 755 check_b2access.py %{buildroot}/%{_libexecdir}/argo-monitoring/pro
 %attr(0755,root,root) /%{_libexecdir}/argo-monitoring/probes/%{probe_namespace}/check_b2access.py
 
 %changelog
+* Tue Jun 05 2018 Shiraz Memon <a.memon@fz-juelich.de> - 0.4-1
+- Adapted to Unity v2.x.x REST API
+- More details in verbose mode
+- Updated the documentation
 * Wed Nov 23 2016 Shiraz Memon <a.memon@fz-juelich.de> - 0.3-1
 - Updated namespace and license information
 * Thu Sep 15 2016 Shiraz Memon <a.memon@fz-juelich.de> - 0.2-1
