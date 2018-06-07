@@ -166,7 +166,7 @@ def getInfoCert(param):
         if param.verbose:
             print "\nQuery user information with X509 Certificate Authentication, endpoint URL:" + url
         
-        entity = requests.get(str(url),verify=True,cert=(str(param.certificate), str(param.key)))
+        entity = requests.get(str(url),verify=False,cert=(str(param.certificate), str(param.key)))
         
         if (entity.status_code == 400) or (entity.status_code == 403):
             raise HTTPError("CRITICAL: Error retrieving the user information with X500Name {0}: invalid certificate".format(dn))
