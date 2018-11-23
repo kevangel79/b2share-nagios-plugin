@@ -1,6 +1,6 @@
-PKGNAME=nagios-plugins-eudat-b2access
+PKGNAME=nagios-plugins-eudat-b2share
 SPECFILE=${PKGNAME}.spec
-FILES=check_b2access.py ${SPECFILE}
+FILES=check_b2share.py ${SPECFILE}
 
 PKGVERSION=$(shell grep -s '^Version:' $(SPECFILE) | sed -e 's/Version:\s*//')
 
